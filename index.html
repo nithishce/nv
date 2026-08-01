@@ -364,7 +364,7 @@
   <button class="music-btn" id="musicToggle" title="Toggle Background Music">
     <i class="fa-solid fa-music"></i>
   </button>
-  <audio id="bgMusic" loop src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=soft-romantic-piano-112328.mp3"></audio>
+  <audio id="bgMusic" autoplay loop src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=soft-romantic-piano-112328.mp3"></audio>
 
   <div class="main-container">
     
@@ -496,21 +496,54 @@
 
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-    // 2. Background Music Toggle
-    const musicBtn = document.getElementById('musicToggle');
-    const bgMusic = document.getElementById('bgMusic');
-    let isPlaying = false;
+    // 2. Background Music Autoplay & Toggle Handler
+const musicBtn = document.getElementById('musicToggle');
+const bgMusic = document.getElementById('bgMusic');
+let isPlaying = false;
 
-    musicBtn.addEventListener('click', () => {
-      if (isPlaying) {
-        bgMusic.pause();
-        musicBtn.innerHTML = '<i class="fa-solid fa-music"></i>';
-      } else {
-        bgMusic.play();
-        musicBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
-      }
-      isPlaying = !isPlaying;
-    });
+// Function to play audio safely
+function playAudio() {
+  bgMusic.play().then(() => {
+    isPlaying = true;
+    musicBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+  }).catch(error => {
+    // Autoplay prevented by browser policy until interaction
+    isPlaying = false;
+    musicBtn.innerHTML = '<i class="fa-solid fa-music"></i>';
+  });
+}
+
+// Try playing on page load immediately
+window.addEventListener('load', () => {
+  playAudio();
+});
+
+// Fallback: Enable audio on the very first touch, click, or scroll anywhere on the screen
+function startAudioOnFirstTouch() {
+  if (!isPlaying) {
+    playAudio();
+  }
+  // Remove event listeners once music starts
+  document.removeEventListener('click', startAudioOnFirstTouch);
+  document.removeEventListener('touchstart', startAudioOnFirstTouch);
+  document.removeEventListener('scroll', startAudioOnFirstTouch);
+}
+
+document.addEventListener('click', startAudioOnFirstTouch);
+document.addEventListener('touchstart', startAudioOnFirstTouch);
+document.addEventListener('scroll', startAudioOnFirstTouch);
+
+// Manual Toggle Button
+musicBtn.addEventListener('click', (e) => {
+  e.stopPropagation(); // Stop global click listener from triggering
+  if (isPlaying) {
+    bgMusic.pause();
+    musicBtn.innerHTML = '<i class="fa-solid fa-music"></i>';
+    isPlaying = false;
+  } else {
+    playAudio();
+  }
+});
 
     // 3. Live Countdown Timer Script
     const weddingDate = new Date("September 24, 2026 10:00:00").getTime();
